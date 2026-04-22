@@ -1,0 +1,15 @@
+desafio_rmi_ds:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: 'rmi.duckdb'
+      extensions:
+        - httpfs
+        - parquet
+    prod:
+      type: duckdb
+      path: 'rmi_prod.duckdb'
+      extensions:
+        - httpfs
+        - parquet

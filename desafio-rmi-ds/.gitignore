@@ -1,0 +1,19 @@
+# dbt
+target/
+dbt_packages/
+logs/
+.dbt/
+*.duckdb
+*.duckdb.wal
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data Files
+*.parquet
+*.csv
+data/
