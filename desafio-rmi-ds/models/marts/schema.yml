@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: mart_educacao__absenteismo
+    description: "Mart focado no absenteísmo crônico por escola e região. Responde à pergunta: 'Quais escolas/regiões têm maior taxa de alunos com frequência abaixo de 75%?'"
+    config:
+      materialized: table
+    columns:
+      - name: regiao
+        description: "Região da escola"
+        tests:
+          - not_null
+      - name: id_escola
+        description: "ID da escola"
+        tests:
+          - not_null
+          - unique
+      - name: total_alunos
+        description: "Total de alunos na escola"
+      - name: alunos_absenteismo_cronico
+        description: "Quantidade de alunos com taxa de frequência abaixo de 75%"
+      - name: taxa_absenteismo_cronico
+        description: "Proporção de alunos com absenteísmo crônico (alunos_absenteismo_cronico / total_alunos)"

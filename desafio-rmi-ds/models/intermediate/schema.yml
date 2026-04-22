@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_educacao__aluno_frequencia
+    description: "Modelo intermediário que consolida a frequência dos alunos por turma."
+    columns:
+      - name: id_aluno
+        description: "ID do aluno"
+        tests:
+          - not_null
+      - name: id_turma
+        description: "ID da turma"
+        tests:
+          - not_null
+      - name: id_escola
+        description: "ID da escola a qual a turma pertence"
+        tests:
+          - not_null
+      - name: total_aulas
+        description: "Total de aulas registradas"
+      - name: total_presencas
+        description: "Total de presenças registradas"
+      - name: total_ausencias
+        description: "Total de ausências registradas"
+      - name: taxa_frequencia
+        description: "Taxa de presença (total_presencas / total_aulas)"

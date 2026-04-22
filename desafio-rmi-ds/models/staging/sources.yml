@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: educacao
+    description: "Dados educacionais do RMI disponibilizados no GCS"
+    tables:
+      - name: aluno
+        description: "Cadastro de alunos"
+        meta:
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/aluno.parquet')"
+      - name: escola
+        description: "Cadastro de unidades escolares"
+        meta:
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/escola.parquet')"
+      - name: turma
+        description: "Informações de turmas"
+        meta:
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/turma.parquet')"
+      - name: frequencia
+        description: "Registros de frequência escolar"
+        meta:
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/frequencia.parquet')"
+      - name: avaliacao
+        description: "Notas e avaliações por bimestre"
+        meta:
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/avaliacao.parquet')"
