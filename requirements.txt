@@ -1,0 +1,11 @@
+scikit-learn
+pandas
+numpy
+pydantic
+optuna
+mlflow
+shap
+pytest
+fastapi
+uvicorn
+matplotlib
