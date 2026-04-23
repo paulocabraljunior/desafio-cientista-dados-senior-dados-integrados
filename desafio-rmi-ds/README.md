@@ -1,4 +1,4 @@
-# Desafio RMI - Analytics Engineering e MLOps
+# Desafio RMI - Analytics Engineering
 
 ![dbt](https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
 ![DuckDB](https://img.shields.io/badge/DuckDB-FFF000?style=for-the-badge&logo=duckdb&logoColor=black)
