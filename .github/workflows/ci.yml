@@ -1,0 +1,32 @@
+name: dbt CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  dbt-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dbt e dependências
+        run: |
+          pip install dbt-duckdb duckdb
+          dbt deps
+        working-directory: ./desafio-rmi-ds
+
+      - name: Run dbt build (Models e Testes em Cascata)
+        run: dbt build
+        working-directory: ./desafio-rmi-ds
