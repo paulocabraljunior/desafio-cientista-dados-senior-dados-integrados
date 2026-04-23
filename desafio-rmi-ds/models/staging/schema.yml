@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: stg_educacao__aluno
+    description: "Modelo de staging para a tabela aluno."
+    columns:
+      - name: id_aluno
+        description: "ID único do aluno"
+        tests:
+          - unique
+          - not_null
+      - name: faixa_etaria
+        description: "Faixa etária do aluno"
+        tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "^[0-9]+-[0-9]+$"
+      - name: id_bairro
+        description: "ID do bairro do aluno"
+
+  - name: stg_educacao__escola
+    description: "Modelo de staging para a tabela escola."
+    columns:
+      - name: id_escola
+        description: "ID único da escola"
+        tests:
+          - unique
+          - not_null
+      - name: tipo
+        description: "Tipo de escola (Fundamental, Médio)"
+        tests:
+          - not_null
+      - name: regiao
+        description: "Região da escola"
+        tests:
+          - not_null
+
+  - name: stg_educacao__turma
+    description: "Modelo de staging para a tabela turma."
+    columns:
+      - name: id_turma
+        description: "ID único da turma"
+        tests:
+          - unique
+          - not_null
+      - name: id_escola
+        description: "ID da escola a qual a turma pertence"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_educacao__escola')
+              field: id_escola
+      - name: serie
+        description: "Série da turma"
+        tests:
+          - not_null
+      - name: turno
+        description: "Turno da turma"
+        tests:
+          - not_null
+      - name: ano_letivo
+        description: "Ano letivo da turma"
+        tests:
+          - not_null
+
+  - name: stg_educacao__frequencia
+    description: "Modelo de staging para a tabela frequencia."
+    columns:
+      - name: id_aluno
+        description: "ID do aluno"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_educacao__aluno')
+              field: id_aluno
+      - name: id_turma
+        description: "ID da turma"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_educacao__turma')
+              field: id_turma
+      - name: data_frequencia
+        description: "Data do registro da frequência"
+        tests:
+          - not_null
+      - name: status
+        description: "Status da presença (Presente, Ausente)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Presente', 'Ausente']
+
+  - name: stg_educacao__avaliacao
+    description: "Modelo de staging para a tabela avaliacao."
+    columns:
+      - name: id_aluno
+        description: "ID do aluno"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_educacao__aluno')
+              field: id_aluno
+      - name: disciplina
+        description: "Disciplina avaliada"
+        tests:
+          - not_null
+      - name: bimestre
+        description: "Bimestre da avaliação"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 4
+      - name: nota
+        description: "Nota do aluno"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.0
+              max_value: 10.0
