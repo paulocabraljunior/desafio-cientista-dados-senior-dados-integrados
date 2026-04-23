@@ -18,8 +18,8 @@ Este projeto estrutura o pipeline analítico para dados educacionais do RMI, seg
 ## Diferenciais Implementados (Going Beyond)
 Para garantir o mais alto nível de governança, este projeto implementa funcionalidades avançadas do dbt:
 - **Data Contracts:** Aplicados na camada de Marts (`contract: {enforced: true}`) para garantir que nenhuma alteração quebre os tipos de dados consumidos pelos painéis de BI.
-- **dbt Packages:** Utilização do `dbt_utils` para geração segura de chaves (surrogate keys) e `dbt_expectations` para testes de distribuição e expressões regulares, elevando o rigor além dos testes genéricos padrão.
-- **CI/CD Automatizado:** Pipeline configurada via GitHub Actions (`.github/workflows/ci.yml`) para rodar linters e `dbt build` a cada Pull Request.
+- **dbt Packages:** Utilização do `dbt_utils` para geração segura de chaves (surrogate keys) e `dbt_expectations` para testes de distribuição, ranges numéricos e expressões regulares, elevando o rigor além dos testes genéricos padrão.
+- **CI/CD Automatizado:** Pipeline configurada via GitHub Actions para rodar linters (SQLFluff, Ruff) e `dbt build` a cada Pull Request garantindo automação de testes e checagem de qualidade antes do merge.
 
 ## Governança e Qualidade
 O repositório está blindado por políticas de governança:
@@ -29,7 +29,7 @@ O repositório está blindado por políticas de governança:
 - Arquivos de dados brutos (`.parquet`, `.csv`) são rigorosamente bloqueados via `.gitignore`.
 
 ## Trade-offs
-- **Ambiente de Data Warehouse:** Optei por rodar o desafio via DuckDB em vez do BigQuery para isolar a infraestrutura local, removendo o ônus de requerer conta GCP ativa do avaliador para execução. Em produção, migraria para o adapter do BigQuery (`dbt-bigquery`).
+- **Ambiente de Data Warehouse:** Optei por rodar o desafio via DuckDB em vez do BigQuery para isolar a infraestrutura local, removendo o ônus de requerer conta GCP ativa do avaliador para execução. Em um ambiente produtivo real, este projeto é perfeitamente portável para o adapter do BigQuery (`dbt-bigquery`).
 
 ## Ambiente de Desenvolvimento (Codespaces)
 O projeto contém uma configuração do **Devcontainer** (`.devcontainer/devcontainer.json`).
@@ -38,7 +38,10 @@ Você pode abrir o projeto no GitHub Codespaces e ele instanciará um contêiner
 - dbt-duckdb, sqlfluff e dependências.
 - Extensões recomendadas do VSCode instaladas (dbt Power User, Ruff, SQLFluff).
 
-### Execução Local (Alternativa)
+## Execução Local (Alternativa)
+
+⚠️ **Importante:** Antes de executar, certifique-se de que os arquivos brutos (`aluno.parquet`, `escola.parquet`, etc.) baixados do GCP foram colocados dentro da pasta `data/` na raiz do projeto.
+
 ```bash
 pip install -r requirements.txt
 dbt deps
