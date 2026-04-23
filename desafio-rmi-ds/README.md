@@ -1,7 +1,9 @@
 # Desafio RMI - Analytics Engineering e MLOps
 
-[![dbt CI](https://github.com/seu-usuario/desafio-rmi-ds/actions/workflows/ci.yml/badge.svg)](https://github.com/seu-usuario/desafio-rmi-ds/actions/workflows/ci.yml)
-[![dbt CD & Docs](https://github.com/seu-usuario/desafio-rmi-ds/actions/workflows/cd.yml/badge.svg)](https://github.com/seu-usuario/desafio-rmi-ds/actions/workflows/cd.yml)
+![dbt](https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
+![DuckDB](https://img.shields.io/badge/DuckDB-FFF000?style=for-the-badge&logo=duckdb&logoColor=black)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![CI/CD](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 
 ## Visão Geral
 Este projeto estrutura o pipeline analítico para dados educacionais do RMI, seguindo padrões de classe Enterprise. O projeto combina Analytics Engineering (via dbt) utilizando a arquitetura Medallion para transformar e testar dados antes que alcancem as camadas de consumo do BI.
