@@ -40,9 +40,11 @@ Você pode abrir o projeto no GitHub Codespaces e ele instanciará um contêiner
 - dbt-duckdb, sqlfluff e dependências.
 - Extensões recomendadas do VSCode instaladas (dbt Power User, Ruff, SQLFluff).
 
-### Execução Local (Alternativa)
+## Execução Local (Alternativa)
+
+⚠️ **Importante:** Antes de executar, certifique-se de que os arquivos brutos (`aluno.parquet`, `escola.parquet`, etc.) baixados do GCP foram colocados dentro da pasta `data/` na raiz do projeto.
+
 ```bash
 pip install -r requirements.txt
 dbt deps
 dbt build
-```
