@@ -1,6 +1,9 @@
 select
     id_aluno,
     id_turma,
-    cast(data as date) as data_frequencia,
-    status
+    id_escola,
+    cast(data_inicio as date) as data_frequencia,
+    frequencia,
+    disciplina,
+    cast(null as varchar) as status
 from {{ source('educacao', 'frequencia') }}

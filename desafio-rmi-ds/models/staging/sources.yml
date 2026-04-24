@@ -7,20 +7,20 @@ sources:
       - name: aluno
         description: "Cadastro de alunos"
         meta:
-          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/aluno.parquet')"
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/aluno')"
       - name: escola
         description: "Cadastro de unidades escolares"
         meta:
-          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/escola.parquet')"
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/escola')"
       - name: turma
         description: "Informações de turmas"
         meta:
-          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/turma.parquet')"
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/turma')"
       - name: frequencia
         description: "Registros de frequência escolar"
         meta:
-          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/frequencia.parquet')"
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/frequencia')"
       - name: avaliacao
         description: "Notas e avaliações por bimestre"
         meta:
-          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/avaliacao.parquet')"
+          external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/avaliacao')"

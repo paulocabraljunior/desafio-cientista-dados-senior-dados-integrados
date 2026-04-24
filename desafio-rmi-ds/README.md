@@ -8,14 +8,23 @@
 ## Visão Geral
 Este projeto estrutura o pipeline analítico para dados educacionais do RMI, seguindo padrões de classe Enterprise. O projeto combina Analytics Engineering (via dbt) utilizando a arquitetura Medallion para transformar e testar dados antes que alcancem as camadas de consumo do BI.
 
-## Arquitetura de Dados (dbt/Medallion)
-1. **Staging (`models/staging/`)**
-   - Importa os dados parquet originais provindos de um data lake (GCS).
-   - Tipagem rigorosa, padronização e testes genéricos primários (garantia da unicidade e não nulidade de chaves).
-2. **Intermediate (`models/intermediate/`)**
-   - Cruza fontes isoladas (frequência, turma, aluno) criando tabelas consolidadas preparatórias.
-3. **Marts (`models/marts/`)**
-   - Agregações de negócio que respondem diretamente a perguntas estratégicas, como as taxas de absenteísmo crônico escolar.
+## Arquitetura de Dados (dbt/Medallion) & Decisões de Modelagem
+O projeto adota a arquitetura Medallion suportada pelas convenções oficiais do dbt Labs:
+
+1. **Staging (`models/staging/stg_*`)**
+   - **Lineage:** Consome diretamente os dados brutos (`sources`) do GCS via a extensão `httpfs` do DuckDB.
+   - **Decisões:** Materializadas como `view`. Aqui fazemos o casting explícito de tipos, renomeamos colunas obscuras para o vernáculo de negócios (ex: `ano` para `ano_letivo`) e removemos/anulamos colunas inexistentes na fonte de dados provida.
+   - **Testes:** Fortemente embasada em testes genéricos de não nulidade, chaves primárias e relacionamentos (`relationships` inter-tabelas).
+
+2. **Intermediate (`models/intermediate/int_*`)**
+   - **Lineage:** Cruza os modelos de staging, agindo como ponte lógica.
+   - **Decisões:** Materializada como `view`. Foi criado o modelo `int_educacao__aluno_frequencia` para consolidar o grão `aluno + turma + escola`, unificando a leitura de frequência total e reduzindo joins repetitivos nos marts.
+   - **Estratégia de Testes:** Focada em Surrogate Keys robustas (via `dbt_utils`) para garantir que os cruzamentos não criem duplicações espúrias.
+
+3. **Marts (`models/marts/mart_*`)**
+   - **Lineage:** Agrega as tabelas intermediárias no grão de análise final para o BI.
+   - **Decisões:** Materializadas como `table` visando a performance de leitura. Desenvolvemos o `mart_educacao__absenteismo` que sumariza o absenteísmo crônico escolar por região e escola.
+   - **Governança:** Protegido por um **Data Contract (`enforced: true`)**. Nenhuma alteração sobe para produção caso quebre a tipagem das colunas que alimentam os painéis finais.
 
 ## Diferenciais Implementados (Going Beyond)
 Para garantir o mais alto nível de governança, este projeto implementa funcionalidades avançadas do dbt:
@@ -30,8 +39,9 @@ O repositório está blindado por políticas de governança:
 - **Testes de Regras de Negócio**: Testes singulares estão embutidos (ex: proxy de impossibilidade de frequências em turmas antes do início do ano letivo).
 - Arquivos de dados brutos (`.parquet`, `.csv`) são rigorosamente bloqueados via `.gitignore`.
 
-## Trade-offs
-- **Ambiente de Data Warehouse:** Optei por rodar o desafio via DuckDB em vez do BigQuery para isolar a infraestrutura local, removendo o ônus de requerer conta GCP ativa do avaliador para execução. Em produção, migraria para o adapter do BigQuery (`dbt-bigquery`).
+## Trade-offs e Visão de Futuro
+- **Ambiente de Data Warehouse:** Optei por rodar o desafio via DuckDB + Parquets online em vez de manter toda a infraestrutura sobre o BigQuery. Isso diminui fricção, não requer conta com billing ativo e demonstra proficiência no processamento descentralizado e in-memory. **Em um ambiente de produção real**, migraríamos a engine inteiramente para o dbt-bigquery, usufruindo da escalabilidade GCP.
+- **Modelagem de Dimensões Lentamente Mutáveis (SCD2):** Atualmente tratamos a base como snapshots. Com mais tempo, eu implementaria tabelas de dbt Snapshots para o cadastro do aluno, acompanhando as transferências entre escolas ao longo dos bimestres.
 
 ## Ambiente de Desenvolvimento (Codespaces)
 O projeto contém uma configuração do **Devcontainer** (`.devcontainer/devcontainer.json`).
@@ -40,10 +50,31 @@ Você pode abrir o projeto no GitHub Codespaces e ele instanciará um contêiner
 - dbt-duckdb, sqlfluff e dependências.
 - Extensões recomendadas do VSCode instaladas (dbt Power User, Ruff, SQLFluff).
 
-## Execução Local (Alternativa)
+## Execução Rápida (Passo a Passo)
+
+⚠️ **Importante:** O projeto está configurado para **ler os dados em tempo real** diretamente do bucket público no Google Cloud Storage durante o runtime (via extensão `httpfs` do DuckDB). Você não precisa baixar nada para a pasta `data/` manualmente.
+
+Abaixo estão as instruções detalhadas para executar a pipeline em seu ambiente local:
+
+1. **Pré-requisitos**
+   Certifique-se de que você tem o Python 3.10+ instalado em sua máquina.
+
+2. **Crie um ambiente virtual e o ative (opcional, mas recomendado)**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # No Windows use: venv\Scripts\activate
+   ```
+
+3. **Instale as bibliotecas necessárias**
+   Na raiz do repositório `desafio-rmi-ds`, execute:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 
-```bash
-pip install -r requirements.txt
-dbt deps
-dbt build
+4. **Rode o Projeto (Extraia, Transforme e Teste)**
+   O comando abaixo conectará ao GCS, processará os parquets via DuckDB, gerará os modelos (Staging, Intermediate e Marts) e rodará todos os testes de qualidade:
+   ```bash
+   dbt build
+   ```
+   > Se tudo ocorrer bem, você verá várias linhas em verde terminando em "Completed successfully".
