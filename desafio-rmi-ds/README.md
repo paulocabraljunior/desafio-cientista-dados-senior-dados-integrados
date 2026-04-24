@@ -71,13 +71,8 @@ Abaixo estão as instruções detalhadas para executar a pipeline em seu ambient
    pip install -r requirements.txt
    ```
 
-4. **Baixe as dependências do dbt**
-   Isso instalará os pacotes do dbt que usamos para validações e chaves primárias (`dbt_utils` e `dbt_expectations`).
-   ```bash
-   dbt deps
-   ```
 
-5. **Rode o Projeto (Extraia, Transforme e Teste)**
+4. **Rode o Projeto (Extraia, Transforme e Teste)**
    O comando abaixo conectará ao GCS, processará os parquets via DuckDB, gerará os modelos (Staging, Intermediate e Marts) e rodará todos os testes de qualidade:
    ```bash
    dbt build
