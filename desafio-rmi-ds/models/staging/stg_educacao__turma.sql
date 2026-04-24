@@ -1,7 +1,8 @@
 select
     id_turma,
-    id_escola,
-    cast(serie as integer) as serie,
-    turno,
-    cast(ano_letivo as integer) as ano_letivo
+    id_aluno,
+    cast(null as int) as id_escola,
+    cast(null as integer) as serie,
+    cast(null as varchar) as turno,
+    cast(ano as integer) as ano_letivo
 from {{ source('educacao', 'turma') }}

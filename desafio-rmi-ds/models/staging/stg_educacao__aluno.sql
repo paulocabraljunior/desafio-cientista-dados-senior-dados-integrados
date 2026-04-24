@@ -1,5 +1,6 @@
 select
     id_aluno,
+    id_turma,
     faixa_etaria,
-    id_bairro
+    bairro as id_bairro
 from {{ source('educacao', 'aluno') }}

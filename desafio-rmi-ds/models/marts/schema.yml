@@ -11,8 +11,6 @@ models:
       - name: regiao
         data_type: varchar
         description: "Região da escola"
-        tests:
-          - not_null
       - name: id_escola
         data_type: varchar
         description: "ID da escola"

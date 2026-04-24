@@ -7,12 +7,12 @@ escola as (
 
 select
     e.regiao,
-    e.id_escola,
+    cast(e.id_escola as varchar) as id_escola,
     count(distinct af.id_aluno) as total_alunos,
     count(distinct case when af.taxa_frequencia < 0.75 then af.id_aluno else null end) as alunos_absenteismo_cronico,
     case
         when count(distinct af.id_aluno) > 0
-        then cast(count(distinct case when af.taxa_frequencia < 0.75 then af.id_aluno else null end) as float) / count(distinct af.id_aluno)
+        then cast(count(distinct case when af.taxa_frequencia < 0.75 then af.id_aluno else null end) as double) / count(distinct af.id_aluno)
         else null
     end as taxa_absenteismo_cronico
 from aluno_frequencia af
