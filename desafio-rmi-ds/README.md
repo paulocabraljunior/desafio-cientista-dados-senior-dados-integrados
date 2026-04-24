@@ -41,7 +41,7 @@ O repositório está blindado por políticas de governança:
 
 ## Trade-offs e Visão de Futuro
 - **Ambiente de Data Warehouse:** Optei por rodar o desafio via DuckDB + Parquets online em vez de manter toda a infraestrutura sobre o BigQuery. Isso diminui fricção, não requer conta com billing ativo e demonstra proficiência no processamento descentralizado e in-memory. **Em um ambiente de produção real**, migraríamos a engine inteiramente para o dbt-bigquery, usufruindo da escalabilidade GCP.
-- **Modelagem de Dimensões Lentamente Mutáveis (SCD2):** Atualmente tratamos a base como snapshots. Com mais tempo, eu implementaria tabelas de dbt Snapshots para o cadastro do aluno, acompanhando as transferências entre escolas ao longo dos bimestres.
+
 
 ## Ambiente de Desenvolvimento (Codespaces)
 O projeto contém uma configuração do **Devcontainer** (`.devcontainer/devcontainer.json`).
