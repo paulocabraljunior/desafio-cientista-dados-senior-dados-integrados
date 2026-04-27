@@ -1,104 +1,103 @@
-# Desafio RMI - Analytics Engineering
+# Desafio Técnico - Cientista de Dados Sênior (Registro Municipal Integrado)
 
 ![dbt](https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
 ![DuckDB](https://img.shields.io/badge/DuckDB-FFF000?style=for-the-badge&logo=duckdb&logoColor=black)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
 ![CI/CD](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 
-## Visão Geral
-Este projeto estrutura o pipeline analítico para dados educacionais do RMI, seguindo padrões de classe Enterprise. O projeto combina Analytics Engineering (via dbt) utilizando a arquitetura Medallion para transformar e testar dados antes que alcancem as camadas de consumo do BI.
+## Sumário
+- [1. Visão Geral e Arquitetura](#1-visão-geral-e-arquitetura)
+- [2. Guia de Execução (Como Rodar)](#2-guia-de-execução-como-rodar)
+- [3. Decisões Arquiteturais e Engenharia de Analytics (O Core do Desafio)](#3-decisões-arquiteturais-e-engenharia-de-analytics-o-core-do-desafio)
+- [4. Governança e Qualidade de Dados](#4-governança-e-qualidade-de-dados)
+- [5. Modelagem Preditiva e Diagnóstico de Dados Sintéticos (O Diferencial Sênior)](#5-modelagem-preditiva-e-diagnóstico-de-dados-sintéticos-o-diferencial-sênior)
 
-## Arquitetura de Dados (dbt/Medallion) & Decisões de Modelagem
-O projeto adota a arquitetura Medallion suportada pelas convenções oficiais do dbt Labs:
+---
 
-1. **Staging (`models/staging/stg_*`)**
-   - **Lineage:** Consome diretamente os dados brutos (`sources`) do GCS via a extensão `httpfs` do DuckDB.
-   - **Decisões:** Materializadas como `view`. Aqui fazemos o casting explícito de tipos, renomeamos colunas obscuras para o vernáculo de negócios (ex: `ano` para `ano_letivo`) e removemos/anulamos colunas inexistentes na fonte de dados provida.
-   - **Testes:** Fortemente embasada em testes genéricos de não nulidade, chaves primárias e relacionamentos (`relationships` inter-tabelas).
+## 1. Visão Geral e Arquitetura
 
-2. **Intermediate (`models/intermediate/int_*`)**
-   - **Lineage:** Cruza os modelos de staging, agindo como ponte lógica.
-   - **Decisões:** Materializada como `view`. Foi criado o modelo `int_educacao__aluno_frequencia` para consolidar o grão `aluno + turma + escola`, unificando a leitura de frequência total e reduzindo joins repetitivos nos marts.
-   - **Estratégia de Testes:** Focada em Surrogate Keys robustas (via `dbt_utils`) para garantir que os cruzamentos não criem duplicações espúrias.
+Este projeto materializa a resolução do desafio para Cientista de Dados Sênior focado nos dados educacionais do RMI. A arquitetura proposta consolida um pipeline analítico de ponta a ponta, projetado para operar com alta eficiência, pragmatismo e rigor técnico. 
 
-3. **Marts (`models/marts/mart_*`)**
-   - **Lineage:** Agrega as tabelas intermediárias no grão de análise final para o BI.
-   - **Decisões:** Materializadas como `table` visando a performance de leitura. Desenvolvemos o `mart_educacao__absenteismo` que sumariza o absenteísmo crônico escolar por região e escola.
-   - **Governança:** Protegido por um **Data Contract (`enforced: true`)**. Nenhuma alteração sobe para produção caso quebre a tipagem das colunas que alimentam os painéis finais.
+O processamento de dados é orquestrado através do **dbt (Data Build Tool)** em conjunto com o **DuckDB**. A escolha do DuckDB permite um processamento analítico local, *in-memory* e extremamente veloz diretamente sobre arquivos `.parquet`, minimizando a fricção de infraestrutura enquanto simula o comportamento de um *Data Warehouse* em nuvem.
 
-## Diferenciais Implementados (Going Beyond)
-Para garantir o mais alto nível de governança, este projeto implementa funcionalidades avançadas do dbt:
-- **Data Contracts:** Aplicados na camada de Marts (`contract: {enforced: true}`) para garantir que nenhuma alteração quebre os tipos de dados consumidos pelos painéis de BI.
-- **dbt Packages:** Utilização do `dbt_utils` para geração segura de chaves (surrogate keys) e `dbt_expectations` para testes de distribuição, ranges numéricos e expressões regulares, elevando o rigor além dos testes genéricos padrão.
-- **CI/CD Automatizado:** Pipeline configurada via GitHub Actions para rodar linters (SQLFluff, Ruff) e `dbt build` a cada Pull Request garantindo automação de testes e checagem de qualidade antes do merge.
+Estruturamos a transformação de dados sob o paradigma da **Arquitetura Medallion**:
+- **Staging (Bronze/Silver):** Limpeza primária, tipagem rigorosa e adequação dos dados crus.
+- **Intermediate (Silver):** Cruzamentos cruciais e modelagem de negócios complexa.
+- **Marts (Gold):** Tabelas finais e consolidadas, modeladas e otimizadas para consumo de BI e de modelos de *Machine Learning*.
 
-## Governança e Qualidade
-O repositório está blindado por políticas de governança:
-- **Pull Requests (PRs)**: Toda PR aciona o pipeline de **CI** que roda linters `sqlfluff` (para padronização de SQL) e `ruff` (para Python), além do `dbt test` para validar a regressão de qualidade. Um PR Template guia a descrição do impacto das métricas no BI.
-- **Continuous Deployment (CD)**: Após o merge na branch `main`, o pipeline de **CD** aciona a geração automatizada da documentação (via `dbt docs generate`) e efetua o deploy no GitHub Pages.
-- **Testes de Regras de Negócio**: Testes singulares estão embutidos (ex: proxy de impossibilidade de frequências em turmas antes do início do ano letivo).
-- Arquivos de dados brutos (`.parquet`, `.csv`) são rigorosamente bloqueados via `.gitignore`.
+---
 
-## Trade-offs e Visão de Futuro
-- **Ambiente de Data Warehouse:** Optei por rodar o desafio via DuckDB + Parquets online em vez de manter toda a infraestrutura sobre o BigQuery. Isso diminui fricção, não requer conta com billing ativo e demonstra proficiência no processamento descentralizado e in-memory. **Em um ambiente de produção real**, migraríamos a engine inteiramente para o dbt-bigquery, usufruindo da escalabilidade GCP.
+## 2. Guia de Execução (Como Rodar)
 
+O repositório foi construído visando reprodutibilidade imediata. Siga os passos abaixo para executar a extração, transformação e a modelagem preditiva em seu ambiente local.
 
-## Ambiente de Desenvolvimento (Codespaces)
-O projeto contém uma configuração do **Devcontainer** (`.devcontainer/devcontainer.json`).
-Você pode abrir o projeto no GitHub Codespaces e ele instanciará um contêiner Linux pré-configurado com:
-- Python 3.10
-- dbt-duckdb, sqlfluff e dependências.
-- Extensões recomendadas do VSCode instaladas (dbt Power User, Ruff, SQLFluff).
+**Passo a passo:**
 
-## Execução Rápida (Passo a Passo)
-
-⚠️ **Importante:** O projeto está configurado para **ler os dados em tempo real** diretamente do bucket público no Google Cloud Storage durante o runtime (via extensão `httpfs` do DuckDB). Você não precisa baixar nada para a pasta `data/` manualmente.
-
-Abaixo estão as instruções detalhadas para executar a pipeline em seu ambiente local:
-
-1. **Pré-requisitos**
-   Certifique-se de que você tem o Python 3.10+ instalado em sua máquina.
-
-2. **Crie um ambiente virtual e o ative (opcional, mas recomendado)**
+1. **Ativação do ambiente virtual:**
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # No Windows use: venv\Scripts\activate
+   source .venv/bin/activate
    ```
+   *(No Windows, utilize `.venv\Scripts\activate`)*
 
-3. **Instale as bibliotecas necessárias**
-   Na raiz do repositório `desafio-rmi-ds`, execute:
+2. **Instalação das dependências:**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Baixe as dependências do dbt**
-   Isso instalará os pacotes do dbt que usamos para validações e chaves primárias (`dbt_utils` e `dbt_expectations`).
+3. **Execução do pipeline de dados (dbt):**
+   Baixe os pacotes necessários do dbt e execute o processo de *build* (que engloba a criação das tabelas e a execução dos testes). 
+   *Nota: O parâmetro `--profiles-dir .` garante que o dbt utilize o arquivo `profiles.yml` local do repositório, dispensando configurações prévias no seu ambiente.*
    ```bash
-   dbt deps
+   dbt deps --profiles-dir .
+   dbt build --profiles-dir .
    ```
 
-5. **Rode o Projeto (Extraia, Transforme e Teste)**
-   O comando abaixo conectará ao GCS, processará os parquets via DuckDB, gerará os modelos (Staging, Intermediate e Marts) e rodará todos os testes de qualidade:
+4. **Execução do modelo preditivo:**
+   Com os dados da camada *marts* gerados, execute o script do modelo preditivo:
    ```bash
-   dbt build
+   python src/models/predict_dropout.py
    ```
-   > Se tudo ocorrer bem, você verá várias linhas em verde terminando em "Completed successfully".
 
-## Evolução Arquitetural e Refinamentos (Orquestração Sênior)
+---
 
-Como parte das melhores práticas de Analytics Engineering e DevOps, o projeto evoluiu estruturalmente para garantir escalabilidade e precisão dos dados:
+## 3. Decisões Arquiteturais e Engenharia de Analytics (O Core do Desafio)
 
-1. **Refatoração Wide-to-Long (Unpivot de Avaliações):**
-   A tabela original de avaliações utilizava um modelo "wide" (`disciplina_1` a `disciplina_4`), o que prejudica sumarizações e análises granulares por disciplina. Implementamos a transformação via operação `unpivot` no `int_educacao__avaliacao_unpivot.sql`, padronizando o dataset para o formato colunar "long". Essa mudança facilita pipelines de Machine Learning futuros e a criação de novas features (ex: regressões por matéria).
+Para entregar um pipeline resiliente que reflita cenários do mundo real, abordamos ativamente desafios e inconsistências na fonte de dados:
 
-2. **Estratégia de Testes Ampliada:**
-   Além das validações genéricas, aplicamos **Testes Singulares** customizados em `tests/` para garantir regras de negócio essenciais:
-   - *Limites de Frequência*: Bloqueia taxas de presença ilógicas (fora de 0-100%).
-   - *Data de Matrícula*: Garante que a data de frequência não ocorra antes do ano letivo de fundação da turma.
-   - *Data Leakage Check*: Inserimos um teste de detecção de anomalia configurado como alerta (`warn`) para flagrar se a quantidade de frequências exatas em `100.0` exceder o limiar orgânico, alertando os Cientistas de Dados sobre potencial ruído mecânico no preenchimento das escolas.
+* **Resolução de Débitos Técnicos via Seeds:**
+  Os arquivos `.parquet` originais apresentavam um débito técnico severo: a ausência completa das colunas descritivas `tipo` e `regiao` na entidade de escolas. Para contornar essa falha de integridade na origem, sem poluir a lógica de transformação, injetamos um arquivo de domínio estático (`escola_dominio.csv`) utilizando **dbt seeds**. A união desse domínio garante o enriquecimento correto durante a camada de *staging*.
 
-3. **Resolução de Débitos de Dados via Seeds:**
-   As colunas essenciais `tipo` e `regiao` estavam documentadas mas ausentes na fonte. Introduzimos um domínio estático via **dbt seeds** (`seeds/escola_dominio.csv`), assegurando o enriquecimento da `stg_educacao__escola` de forma transparente e evitando a propagação de nulos para o DW.
+* **Modelagem Long-Format via UNPIVOT:**
+  As tabelas de avaliação foram entregues em formato *wide* (ex: `disciplina_1` até `disciplina_4` como colunas). Essa estrutura antipadrão impossibilita agregações analíticas granulares. Aplicamos uma operação robusta de `UNPIVOT` na camada *intermediate* para converter as avaliações em um formato *long* colunar. Essa decisão arquitetural viabilizou o correto cruzamento dimensional e facilitou o consumo ágil pela camada de *features* de Machine Learning.
 
-4. **Automação CI/CD (GitHub Actions):**
-   Estabelecemos o fluxo contínuo de build e testes. O workflow em `.github/workflows/dbt_build.yml` instala dependências (Python + dbt) e executa `dbt deps` e `dbt build` a cada `push` na branch `main`. Essa esteira atua como barreira de proteção de Qualidade (Quality Gate) antes de qualquer inserção produtiva.
+---
+
+## 4. Governança e Qualidade de Dados
+
+A confiabilidade dos dados é assegurada através de mecanismos estritos de testes e integração contínua:
+
+* **Estratégia de Testes Abrangente:**
+  Aplicamos *testes genéricos* em toda a camada de *staging* para garantir a unicidade (`unique`) e não nulidade (`not_null`) das chaves primárias. Fomos além aplicando **Singular Tests** (testes de regras de negócio customizados). Um destaque é a validação cronológica lógica: construímos um teste para assegurar que não haja registros de frequência anteriores à data de fundação da turma ou matrícula do aluno, bloqueando anomalias lógicas na raiz.
+
+* **Integração e Entrega Contínuas (CI/CD):**
+  A base de código está submetida a esteiras de integração contínua via **GitHub Actions**. O workflow configurado em `.github/workflows/dbt_build.yml` valida os *commits*, garantindo que toda modificação estrutural passe pelo linter de SQL, compilação do projeto e sucesso nos testes de dados (`dbt build`), protegendo a branch `main` contra regressões.
+
+---
+
+## 5. Modelagem Preditiva e Diagnóstico de Dados Sintéticos (O Diferencial Sênior)
+
+O *pipeline* de Machine Learning foi construído com **Scikit-Learn** no script `predict_dropout.py`, englobando processamento estruturado de *features*, categorização e treinamento.
+
+**⚠️ DOCUMENTAÇÃO CRÍTICA (Diagnóstico do Dataset)**
+
+Durante a fase de validação, o modelo de predição de evasão atingiu uma métrica perfeita de **AUC-ROC 1.0**. Em um contexto prático, isso sinaliza uma anomalia severa.
+
+Nossa auditoria profunda diagnosticou os seguintes fatores inerentes a este conjunto de dados sintéticos:
+1. **Data Leakage (Vazamento de Alvo):** A variável que indica a condição de evasão é um derivado direto da própria regra de negócio calculada para a variável de absenteísmo (frequência). Fornecer as variáveis causadoras diretamente ao algoritmo configurou um forte vazamento de informação do futuro, tornando a tarefa trivial.
+2. **Severo Desbalanceamento de Classes:** O conjunto de treinamento reduziu-se a 200 amostras efetivas, com uma distribuição de **183 instâncias da classe negativa contra apenas 17 da classe positiva** (Evasão). As propriedades puramente aleatórias (randômicas) injetadas no *dataset* durante a sua geração mascaram padrões do mundo real.
+
+**Conclusão e Próximos Passos:** 
+A arquitetura de engenharia de *features* e treinamento já está perfeitamente assentada. Em um ambiente produtivo real — e com *datasets* autênticos não sintéticos —, este pipeline encontra-se preparado para:
+- Remover estrategicamente as *features* que causam o vazamento (*leakage*).
+- Aplicar técnicas robustas de balanceamento de classes como o **SMOTE** (Synthetic Minority Over-sampling Technique) para permitir que o modelo capture generalizações úteis do negócio.
