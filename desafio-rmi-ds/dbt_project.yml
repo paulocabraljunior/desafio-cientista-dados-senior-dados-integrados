@@ -10,8 +10,8 @@ macro-paths: ["macros"]
 models:
   desafio_rmi_ds:
     staging:
-      materialized: view
+      +materialized: view
     intermediate:
-      materialized: view
+      +materialized: view
     marts:
-      materialized: table
+      +materialized: table

@@ -83,3 +83,22 @@ Abaixo estão as instruções detalhadas para executar a pipeline em seu ambient
    dbt build
    ```
    > Se tudo ocorrer bem, você verá várias linhas em verde terminando em "Completed successfully".
+
+## Evolução Arquitetural e Refinamentos (Orquestração Sênior)
+
+Como parte das melhores práticas de Analytics Engineering e DevOps, o projeto evoluiu estruturalmente para garantir escalabilidade e precisão dos dados:
+
+1. **Refatoração Wide-to-Long (Unpivot de Avaliações):**
+   A tabela original de avaliações utilizava um modelo "wide" (`disciplina_1` a `disciplina_4`), o que prejudica sumarizações e análises granulares por disciplina. Implementamos a transformação via operação `unpivot` no `int_educacao__avaliacao_unpivot.sql`, padronizando o dataset para o formato colunar "long". Essa mudança facilita pipelines de Machine Learning futuros e a criação de novas features (ex: regressões por matéria).
+
+2. **Estratégia de Testes Ampliada:**
+   Além das validações genéricas, aplicamos **Testes Singulares** customizados em `tests/` para garantir regras de negócio essenciais:
+   - *Limites de Frequência*: Bloqueia taxas de presença ilógicas (fora de 0-100%).
+   - *Data de Matrícula*: Garante que a data de frequência não ocorra antes do ano letivo de fundação da turma.
+   - *Data Leakage Check*: Inserimos um teste de detecção de anomalia configurado como alerta (`warn`) para flagrar se a quantidade de frequências exatas em `100.0` exceder o limiar orgânico, alertando os Cientistas de Dados sobre potencial ruído mecânico no preenchimento das escolas.
+
+3. **Resolução de Débitos de Dados via Seeds:**
+   As colunas essenciais `tipo` e `regiao` estavam documentadas mas ausentes na fonte. Introduzimos um domínio estático via **dbt seeds** (`seeds/escola_dominio.csv`), assegurando o enriquecimento da `stg_educacao__escola` de forma transparente e evitando a propagação de nulos para o DW.
+
+4. **Automação CI/CD (GitHub Actions):**
+   Estabelecemos o fluxo contínuo de build e testes. O workflow em `.github/workflows/dbt_build.yml` instala dependências (Python + dbt) e executa `dbt deps` e `dbt build` a cada `push` na branch `main`. Essa esteira atua como barreira de proteção de Qualidade (Quality Gate) antes de qualquer inserção produtiva.

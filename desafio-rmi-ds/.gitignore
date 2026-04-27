@@ -7,3 +7,4 @@ data/
 *.duckdb.wal
 __pycache__/
 *.pyc
+.agent/
